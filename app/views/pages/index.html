@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Problem with Manhattan</title>
+    <script src="https://d3js.org/d3.v4.min.js"></script>
+  </head>
+  <style>
+    .map-group {
+      fill: white;
+      stroke: black;
+    }
+
+    circle.photo {
+      fill: red;
+    }
+
+  </style>
+  <script>
+
+    const height = 120
+    const width = window.innerHeight
+    const margin = {left: 0, right: 0, top: 20, bottom: 20}
+
+
+    // Drawing this shit, add the base SVG
+    const svg = d3.select('body').append('svg')
+                .attr('height', '100vh')
+                .attr('width', '100%')
+
+    const drawMap = (error, geo, photos) => {
+      const mapMaxWidth = 500
+      const mapMarginRight = 200
+
+      // Map of manhattan container
+      const mapGroup = svg.append('g')
+                        .attr('transform', `translate(${height + margin.left}, 0)`)
+                        .attr('class', 'map-group')
+
+      const projection = d3.geoMercator()
+                          .rotate([0, 0, 100])
+                          .fitExtent([[0, margin.top], [mapMaxWidth, window.innerHeight - margin.top]], geo)
+
+
+      const geoPath = d3.geoPath()
+                      .projection(projection)
+
+      // Drawing the map
+      mapGroup.append('path')
+                .attr('d', geoPath(geo))
+                .attr('class', 'geo')
+                .attr('transform', `translate(${window.innerWidth - mapMaxWidth - mapMarginRight}, 0)`)
+
+
+      // Adding the circles
+      mapGroup.selectAll('circle.photo')
+              .data(photos.photos)
+              .enter().append('circle')
+                      .attr('cx', (d,i) => projection([d.lng, d.lat])[0])
+                      .attr('cy', (d,i) => projection([d.lng, d.lat])[1])
+                      .attr('r', 3)
+                      .attr('class', 'photo')
+    }
+
+
+    // Load the data
+    d3.queue()
+      .defer(d3.json, 'manhattan.geojson')
+      .defer(d3.json, 'new-york-photos-park.json')
+      .await(drawMap)
+
+
+  </script>
+
+  <body>
+  </body>
+</html>
